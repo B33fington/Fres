@@ -1,5 +1,4 @@
 // gcc particles.c utils/*.c -lGL -lX11 -lm -o particles
-//and stuff
 
 #include <stdlib.h>
 
@@ -19,6 +18,8 @@
 
 //Global variables
 GLuint drawShader, updateShader, vertArray, vertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
+int swapper = 0;
+
 GLfloat particles[W][H][4];
 
 GLfloat particleVerts[W*H*2];
@@ -38,22 +39,22 @@ GLfloat texVerts[] = {
 void initParticles(){
     int i, j, k, l;
     int r;
+    float dx, dy;
     l = 0;
     srand(time(NULL));
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
             r = (int)round(rand()/(float)RAND_MAX);
-            
+           
             particles[i][j][0] = 0.0f;
             particles[i][j][1] = 0.0f;
-            particles[i][j][2] = 0.0f;
-            particles[i][j][3] = 1.0f;
+            particles[i][j][2] = 0.01f;
+            particles[i][j][3] = 0.0f;
 
             if(r == 1){
                 particles[i][j][0] = (float)i/(float)W;
                 particles[i][j][1] = (float)j/(float)H;
-
             }
 
             indices[l] = (float)i;
@@ -131,21 +132,45 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(vertArray);
-    glBindVertexArray(indexArray); 
+    glBindVertexArray(indexArray);
 
-    glUseProgram(updateShader);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex0);
-    glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
-    glDrawArrays(GL_POINTS, 0, W*H);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if(swapper == 0){
 
-    glUseProgram(drawShader); 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, tex1);
+        glUseProgram(updateShader);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex0);
+        glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
+        glDrawArrays(GL_POINTS, 0, W*H);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
+        glUseProgram(drawShader); 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex1);
+
+        glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 1);
+        swapper = 1;
+        printf("%s\n", "0");
+
+    }else{
+
+        glUseProgram(updateShader);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex1);
+        glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 1);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo0);
+        glDrawArrays(GL_POINTS, 0, W*H);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glUseProgram(drawShader); 
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex0);
+
+        glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
+        swapper = 0;
+        printf("%s\n", "1");
+    }
+
     glDrawArrays(GL_POINTS, 0, W*H);
     glutSwapBuffers();
 }
