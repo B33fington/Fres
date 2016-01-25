@@ -49,7 +49,7 @@ void initParticles(){
            
             particles[i][j][0] = 0.0f;
             particles[i][j][1] = 0.0f;
-            particles[i][j][2] = 0.01f;
+            particles[i][j][2] = 0.0001f;
             particles[i][j][3] = 0.0f;
 
             if(r == 1){
@@ -150,7 +150,7 @@ void display(void){
 
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 1);
         swapper = 1;
-        printf("%s\n", "0");
+        //printf("%s\n", "0");
 
     }else{
 
@@ -168,28 +168,40 @@ void display(void){
 
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
         swapper = 0;
-        printf("%s\n", "1");
+        //printf("%s\n", "1");
     }
 
     glDrawArrays(GL_POINTS, 0, W*H);
     glutSwapBuffers();
 }
 
+// This function is called whenever the computer is idle
+// As soon as the machine is idle, ask GLUT to trigger rendering of a new
+// frame
+void idle()
+{
+  glutPostRedisplay();
+}
+
 int main(int argc, char** argv)
 {
-    glutInit(&argc, argv);
-    
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-    glutInitWindowSize(W, H);
-    glutInitWindowPosition(100, 100);
-    glutInitContextVersion(3, 2);
-    glutCreateWindow("Rakt i Prutten");
-    
-    glutDisplayFunc(display);
+  glutInit(&argc, argv);
+  
+  glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+  glutInitWindowSize(W, H);
+  glutInitWindowPosition(100, 100);
+  glutInitContextVersion(3, 2);
+  glutCreateWindow("Rakt i Prutten");
+  
+  glutDisplayFunc(display);
+	glutIdleFunc(idle);
 
     init();
 
     glutMainLoop();
     
-    return 0;
+    exit(0);
 }
+
+
+
