@@ -17,7 +17,7 @@
 #define H 512
 
 //Global variables
-GLuint drawShader, vertArray, vertBuffer, indexArray, indexBuffer, tex;
+GLuint drawShader, updateShader, vertArray, vertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
 GLfloat particles[W][H][4];
 
 GLfloat particleVerts[W*H*2];
@@ -35,15 +35,25 @@ GLfloat texVerts[] = {
 };
 
 void initParticles(){
-    //srand(time(NULL));
     int i, j, k, l;
+    int r;
     l = 0;
+    srand(time(NULL));
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
-            particles[i][j][0] = (float)i/(float)W;
-            particles[i][j][1] = (float)j/(float)H;
+            
+            r = (int)round(rand()/(float)RAND_MAX);
+            
+            particles[i][j][0] = 0.0f;
+            particles[i][j][1] = 0.0f;
             particles[i][j][2] = 0.0f;
             particles[i][j][3] = 1.0f;
+
+            if(r == 1){
+                particles[i][j][0] = (float)i/(float)W;
+                particles[i][j][1] = (float)j/(float)H;
+
+            }
 
             indices[l] = (float)i;
             indices[l+1] = (float)j;
@@ -52,7 +62,6 @@ void initParticles(){
             l += 2;
         }
     }
-    //printf("%f, %f\n", indices[200], indices[201]);
 }
 
 void init(void){
@@ -60,52 +69,82 @@ void init(void){
     initParticles();
 
     drawShader = loadShaders("draw.vert", "draw.frag");
-		//Generera arrayer. Måste tydligen göra båda dessa innan vi genererar buffrar!?    
-		glGenVertexArrays(1, &vertArray);
+    updateShader = loadShaders("update.vert", "update.frag");
+
+	//Generera arrayer. Måste tydligen göra båda dessa innan vi genererar buffrar!?    
+	glGenVertexArrays(1, &vertArray);
     glBindVertexArray(vertArray);
     glGenVertexArrays(1, &indexArray);
     glBindVertexArray(indexArray);
 
 		
-    // start: to send the position to the vert shader //
-		glGenBuffers(1, &vertBuffer);
+    // start: to send the position to draw.vert//
+	glGenBuffers(1, &vertBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(glGetAttribLocation(drawShader, "in_Position"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
-    // end //
+    glVertexAttribPointer(glGetAttribLocation(updateShader, "in_Position"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
 
-    //start: send the indices to the vert shader//
+    //start: send the indices to the draw.vert//
     glGenBuffers(1, &indexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(glGetAttribLocation(drawShader, "indices"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
-    //
+    glVertexAttribPointer(glGetAttribLocation(updateShader, "indices"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
 
-
-    glGenTextures(1, &tex);
-    glActiveTexture(tex); //*
-    glBindTexture(GL_TEXTURE_2D, tex);
+    //tex 1 and fbo object 1
+    glGenTextures(1, &tex0);
+    glActiveTexture(tex0);
+    glBindTexture(GL_TEXTURE_2D, tex0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glGenerateMipmap(GL_TEXTURE_2D);
-
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, W, H, 0, GL_RGBA, GL_FLOAT, particles);
-    glUseProgram(drawShader);//*
-    glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
+
+    glGenFramebuffers(1, &fbo0);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex0, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    //tex 2 and fbo object 2
+    glGenTextures(1, &tex1);
+    glActiveTexture(tex1);
+    glBindTexture(GL_TEXTURE_2D, tex1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, W, H, 0, GL_RGBA, GL_FLOAT, particles);
+
+    glGenFramebuffers(1, &fbo1);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex1, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);    
     //-------Draw shaders-----------//
-
-
 }
 
 void display(void){
     glClearColor(0.0f,0.0f,0.0f,0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(drawShader);
     glBindVertexArray(vertArray);
-    glBindVertexArray(indexArray);
+    glBindVertexArray(indexArray); 
+
+    glUseProgram(updateShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex0);
+    glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
+    glDrawArrays(GL_POINTS, 0, W*H);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glUseProgram(drawShader); 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, tex1);
+
+    glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
     glDrawArrays(GL_POINTS, 0, W*H);
     glutSwapBuffers();
 }
