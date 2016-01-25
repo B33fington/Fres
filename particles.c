@@ -1,4 +1,5 @@
 // gcc particles.c utils/*.c -lGL -lX11 -lm -o particles
+//and stuff
 
 #include <stdlib.h>
 
