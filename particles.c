@@ -13,17 +13,16 @@
 #include "utils/VectorUtils3.h"
 #include "utils/GL_utilities.h"
 
-#define W 512
-#define H 512
+#define W 1000
+#define H 800
 
 //Global variables
-GLuint drawShader, updateShader, vertArray, vertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
+GLuint drawShader, updateShader, triVertArray, triVertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
 int swapper = 0;
 int count = 0;
 
 GLfloat particles[W][H][4];
 
-GLfloat particleVerts[W*H*2];
 GLfloat indices[W*H*2];
 
 //texture to show
@@ -46,22 +45,22 @@ void initParticles(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            r = (int)round(rand()/(float)RAND_MAX);
-           
-            particles[i][j][0] = 0.0f;
-            particles[i][j][1] = 0.0f;
-            particles[i][j][2] = (float)rand()/RAND_MAX*0.001f;
-            particles[i][j][3] = (float)rand()/RAND_MAX*0.001f;
+            r = rand()%10;
 
             if(r == 1){
-                particles[i][j][0] = (float)i/(float)W;
-                particles[i][j][1] = (float)j/(float)H;
+                particles[i][j][0] = (float)i/(float)W*2.0 - 1.0;
+                particles[i][j][1] = (float)j/(float)H*2.0 - 1.0;
+                particles[i][j][2] = ((rand()/(float)RAND_MAX)*2.0 - 1.0)*0.00001f;
+                particles[i][j][3] = ((rand()/(float)RAND_MAX)*2.0 - 1.0)*0.00001f;
+            } else{
+                particles[i][j][0] = -1.0f;
+                particles[i][j][1] = -1.0f;
+                particles[i][j][2] = 0.0f;
+                particles[i][j][3] = 0.0f;
             }
 
             indices[l] = (float)i;
             indices[l+1] = (float)j;
-            particleVerts[l] = 0.0f;
-            particleVerts[l+1] = 0.0f;
             l += 2;
         }
     }
@@ -74,28 +73,26 @@ void init(void){
     drawShader = loadShaders("draw.vert", "draw.frag");
     updateShader = loadShaders("update.vert", "update.frag");
 
-	//Generera arrayer. Måste tydligen göra båda dessa innan vi genererar buffrar!?    
-	glGenVertexArrays(1, &vertArray);
-    glBindVertexArray(vertArray);
+	//Generera arrayer. Måste tydligen göra båda dessa innan vi genererar buffrar!?
+    glGenVertexArrays(1, &triVertArray);
     glGenVertexArrays(1, &indexArray);
-    glBindVertexArray(indexArray);
-
 		
-    // start: to send the position to draw.vert//
-	glGenBuffers(1, &vertBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(particleVerts), particleVerts, GL_STATIC_DRAW);
+    //start: to send the position to draw.vert//
+    glBindVertexArray(triVertArray);
+	glGenBuffers(1, &triVertBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, triVertBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texVerts), texVerts, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(glGetAttribLocation(drawShader, "in_Position"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
-    glVertexAttribPointer(glGetAttribLocation(updateShader, "in_Position"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
+    glVertexAttribPointer(glGetAttribLocation(updateShader, "in_Position"), 3, GL_FLOAT, GL_FALSE, 3*sizeof(GL_FLOAT), 0);
+
 
     //start: send the indices to the draw.vert//
+    glBindVertexArray(indexArray);
     glGenBuffers(1, &indexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(glGetAttribLocation(drawShader, "indices"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
-    glVertexAttribPointer(glGetAttribLocation(updateShader, "indices"), 2, GL_FLOAT, GL_FALSE, 2*sizeof(GL_FLOAT), 0);
 
     //tex 1 and fbo object 1
     glGenTextures(1, &tex0);
@@ -131,64 +128,52 @@ void init(void){
 void display(void){
     glClearColor(0.0f,0.0f,0.0f,0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 
 
-    glBindVertexArray(vertArray);
-    glBindVertexArray(indexArray);
+    //glBindVertexArray(vertArray);
+    
 
     if(swapper == 0){
-
+        glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex0);
         glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 0);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
-        glDrawArrays(GL_POINTS, 0, W*H);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				// Clear framebuffer & zbuffer
-				//glClearColor(0.0f, 0.0f, 0.0f, 0);
-				//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);				
-
+				
+        glBindVertexArray(indexArray);
         glUseProgram(drawShader); 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex1);
 
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 1);
         swapper = 1;
-        //printf("%s\n", "0");
-
-    }else{
-
+    } else{
+        glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex1);
         glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 1);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo0);
-        glDrawArrays(GL_POINTS, 0, W*H);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				glBindTexture(GL_TEXTURE_2D, 0);
-        
-				// Clear framebuffer & zbuffer
-				//glClearColor(0.0f, 0.0f, 0.0f, 0);
-				//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-
-				glUseProgram(drawShader); 
+	
+        glBindVertexArray(indexArray);
+		glUseProgram(drawShader); 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex0);
 
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
         swapper = 0;
-        //printf("%s\n", "1");
     }
 
     glDrawArrays(GL_POINTS, 0, W*H);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		printf("%i\n", count);
-		count++;
+
+	glBindTexture(GL_TEXTURE_2D, 0);
     glutSwapBuffers();
 }
 
@@ -207,8 +192,8 @@ int main(int argc, char** argv)
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
   glutInitWindowSize(W, H);
   glutInitWindowPosition(100, 100);
-  glutInitContextVersion(3, 2);
-  glutCreateWindow("Rakt i Prutten");
+  glutInitContextVersion(4, 3);
+  glutCreateWindow("We'll have all the details! Plus, Chopper Dave! HEYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
   
   glutDisplayFunc(display);
 	glutIdleFunc(idle);
