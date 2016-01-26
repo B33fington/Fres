@@ -19,6 +19,7 @@
 //Global variables
 GLuint drawShader, updateShader, vertArray, vertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
 int swapper = 0;
+int count = 0;
 
 GLfloat particles[W][H][4];
 
@@ -49,8 +50,8 @@ void initParticles(){
            
             particles[i][j][0] = 0.0f;
             particles[i][j][1] = 0.0f;
-            particles[i][j][2] = 0.0001f;
-            particles[i][j][3] = 0.0f;
+            particles[i][j][2] = (float)rand()/RAND_MAX*0.001f;
+            particles[i][j][3] = (float)rand()/RAND_MAX*0.001f;
 
             if(r == 1){
                 particles[i][j][0] = (float)i/(float)W;
@@ -130,6 +131,9 @@ void init(void){
 void display(void){
     glClearColor(0.0f,0.0f,0.0f,0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+
 
     glBindVertexArray(vertArray);
     glBindVertexArray(indexArray);
@@ -143,6 +147,11 @@ void display(void){
         glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
         glDrawArrays(GL_POINTS, 0, W*H);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				// Clear framebuffer & zbuffer
+				//glClearColor(0.0f, 0.0f, 0.0f, 0);
+				//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);				
 
         glUseProgram(drawShader); 
         glActiveTexture(GL_TEXTURE1);
@@ -161,8 +170,13 @@ void display(void){
         glBindFramebuffer(GL_FRAMEBUFFER, fbo0);
         glDrawArrays(GL_POINTS, 0, W*H);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				glBindTexture(GL_TEXTURE_2D, 0);
+        
+				// Clear framebuffer & zbuffer
+				//glClearColor(0.0f, 0.0f, 0.0f, 0);
+				//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
-        glUseProgram(drawShader); 
+				glUseProgram(drawShader); 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex0);
 
@@ -172,6 +186,9 @@ void display(void){
     }
 
     glDrawArrays(GL_POINTS, 0, W*H);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		printf("%i\n", count);
+		count++;
     glutSwapBuffers();
 }
 

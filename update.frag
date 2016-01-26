@@ -11,5 +11,5 @@ void main(void){
 	dx = texture(texUnit, outTexCoord).b;
 	dy = texture(texUnit, outTexCoord).a;
 
-	color = vec4(px + dx, py + dy, dx, dy);
+	color = vec4(px+dx, py+dy, dx, dy);
 }
