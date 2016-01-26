@@ -1,15 +1,13 @@
 #version 330
-in vec2 outTexCoord;
+
 out vec4 color;
 
 uniform sampler2D texUnit;
-float px, py, dx, dy;
+vec4 texInfo;
+float gravity;
 
 void main(void){
-	px = texture(texUnit, outTexCoord).r;
-	py = texture(texUnit, outTexCoord).g;
-	dx = texture(texUnit, outTexCoord).b;
-	dy = texture(texUnit, outTexCoord).a;
-
-	color = vec4(px+dx, py+dy, dx, dy);
+	gravity = -0.001f;
+	texInfo = texelFetch(texUnit, ivec2(gl_FragCoord.xy), 0);
+	color = vec4(texInfo.r + texInfo.b, texInfo.g + texInfo.a, texInfo.b, texInfo.a);
 }
