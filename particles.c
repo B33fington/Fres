@@ -46,18 +46,18 @@ void initParticles(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            r = (int)round(rand()/(float)RAND_MAX);
+            //r = (int)round(rand()/(float)RAND_MAX);
            
-            particles[i][j][0] = 0.0f;
-            particles[i][j][1] = 0.0f;
+            particles[i][j][0] = (float)i/(float)W;
+            particles[i][j][1] = (float)j/(float)H;
             particles[i][j][2] = (float)rand()/RAND_MAX*0.001f;
             particles[i][j][3] = (float)rand()/RAND_MAX*0.001f;
-
-            if(r == 1){
-                particles[i][j][0] = (float)i/(float)W;
-                particles[i][j][1] = (float)j/(float)H;
+						/*
+            if(r == 0){
+								particles[i][j][0] = 0.0f;
+            		particles[i][j][1] = 0.0f;                
             }
-
+						*/
             indices[l] = (float)i;
             indices[l+1] = (float)j;
             particleVerts[l] = 0.0f;
@@ -111,6 +111,9 @@ void init(void){
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+		glBindVertexArray(0);
+		//glBindVertexArray();
+
 
     //tex 2 and fbo object 2
     glGenTextures(1, &tex1);
@@ -135,7 +138,7 @@ void display(void){
 		glDisable(GL_DEPTH_TEST);
 
 
-    glBindVertexArray(vertArray);
+    //glBindVertexArray(vertArray);
     glBindVertexArray(indexArray);
 
     if(swapper == 0){
@@ -187,7 +190,7 @@ void display(void){
 
     glDrawArrays(GL_POINTS, 0, W*H);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		printf("%i\n", count);
+		//printf("%i\n", count);
 		count++;
     glutSwapBuffers();
 }
