@@ -47,7 +47,9 @@ void initScene(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            r = rand()%2;
+
+
+            r = rand()%5;
 
             //creation of the particles
             if(r == 1){ 
@@ -66,7 +68,6 @@ void initScene(){
                 collisions[i][j][2] = nD;
                 collisions[i][j][3] = nD;
             }
-
             indices[l] = (float)i;
             indices[l+1] = (float)j;
             l += 2;
@@ -116,6 +117,9 @@ void init(void){
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+		glBindVertexArray(0);
+		//glBindVertexArray();
+
 
     //tex 2 and fbo object 2
     glGenTextures(1, &tex1);
@@ -147,6 +151,7 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
+
 
     if(swapper == 0){
         glBindVertexArray(triVertArray);
@@ -202,6 +207,7 @@ void display(void){
 		
     glDrawArrays(GL_POINTS, 0, W*H);
     glBindTexture(GL_TEXTURE_2D, 0);
+
 
     //glDisable(GL_BLEND);
     glutSwapBuffers();
