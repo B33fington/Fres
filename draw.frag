@@ -1,6 +1,6 @@
 #version 330
 
-uniform sampler2D texUnit;
+uniform sampler2D partTex;
 out vec4 outColor;
 
 void main(void){

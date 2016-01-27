@@ -15,13 +15,15 @@
 
 #define W 512
 #define H 512
+#define nD 0.7071
 
 //Global variables
-GLuint drawShader, updateShader, triVertArray, triVertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
+GLuint drawShader, updateShader, triVertArray, triVertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1, colTex;
 int swapper = 0;
 int count = 0;
 
-GLfloat particles[W][H][4];
+GLfloat particles[W][H][4] = {0.0f};
+GLfloat collisions[W][H][4] = {0.0f};
 
 GLfloat indices[W*H*2];
 
@@ -36,7 +38,7 @@ GLfloat texVerts[] = {
      1.0f,  1.0f, 0.0f
 };
 
-void initParticles(){
+void initScene(){
     int i, j, k, l;
     int r;
     float dx, dy;
@@ -45,18 +47,24 @@ void initParticles(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            r = rand()%5;
+            r = rand()%2;
 
-            if(r == 1){
+            //creation of the particles
+            if(r == 1){ 
                 particles[i][j][0] = (float)i/(float)W*2.0 - 1.0;
-                particles[i][j][1] = (float)j/(float)H*2.0 - 1.0;
+                particles[i][j][1] = 1.0f;//(float)j/(float)H*2.0 - 1.0;
                 particles[i][j][2] = ((rand()/(float)RAND_MAX)*2.0 - 1.0)*0.00001f;
                 particles[i][j][3] = ((rand()/(float)RAND_MAX)*2.0 - 1.0)*0.00001f;
             } else{
                 particles[i][j][0] = -1.0f;
                 particles[i][j][1] = -1.0f;
-                particles[i][j][2] = 0.0f;
-                particles[i][j][3] = 0.0f;
+            }
+
+            //creation of the collision texture
+            if(i <= j){
+                collisions[i][j][0] = 1.0f;
+                collisions[i][j][2] = nD;
+                collisions[i][j][3] = nD;
             }
 
             indices[l] = (float)i;
@@ -68,7 +76,7 @@ void initParticles(){
 
 void init(void){
     dumpInfo();
-    initParticles();
+    initScene();
 
     drawShader = loadShaders("draw.vert", "draw.frag");
     updateShader = loadShaders("update.vert", "update.frag");
@@ -122,7 +130,16 @@ void init(void){
     glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex1, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);    
-    //-------Draw shaders-----------//
+
+    //collision texture//
+    glGenTextures(1, &colTex);
+    glActiveTexture(colTex);
+    glBindTexture(GL_TEXTURE_2D, colTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, W, H, 0, GL_RGBA, GL_FLOAT, collisions);
+
 }
 
 void display(void){
@@ -135,8 +152,13 @@ void display(void){
         glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex0);
-        glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 0);
+        glBindTexture(GL_TEXTURE_2D, tex0);    
+        glUniform1i(glGetUniformLocation(updateShader, "partTex"), 0);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, colTex);
+        glUniform1i(glGetUniformLocation(updateShader, "colTex"), 2);
+
         glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -146,14 +168,19 @@ void display(void){
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex1);
 
-        glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 1);
+        glUniform1i(glGetUniformLocation(drawShader, "partTex"), 1);
         swapper = 1;
     } else{
         glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex1);
-        glUniform1i(glGetUniformLocation(updateShader, "texUnit"), 1);
+        glUniform1i(glGetUniformLocation(updateShader, "partTex"), 1);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, colTex);
+        glUniform1i(glGetUniformLocation(updateShader, "colTex"), 2);
+
         glBindFramebuffer(GL_FRAMEBUFFER, fbo0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -163,7 +190,7 @@ void display(void){
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex0);
 
-        glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
+        glUniform1i(glGetUniformLocation(drawShader, "colTex"), 0);
         swapper = 0;
     }
     
@@ -172,7 +199,7 @@ void display(void){
     glBlendEquation( GL_FUNC_ADD );
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     */
-
+		
     glDrawArrays(GL_POINTS, 0, W*H);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -191,7 +218,7 @@ void idle()
 int main(int argc, char** argv)
 {
   glutInit(&argc, argv);
-  
+
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
   glutInitWindowSize(W, H);
   glutInitWindowPosition(100, 100);
