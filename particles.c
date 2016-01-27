@@ -13,8 +13,8 @@
 #include "utils/VectorUtils3.h"
 #include "utils/GL_utilities.h"
 
-#define W 1000
-#define H 800
+#define W 512
+#define H 512
 
 //Global variables
 GLuint drawShader, updateShader, triVertArray, triVertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
@@ -45,7 +45,7 @@ void initParticles(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            r = rand()%10;
+            r = rand()%5;
 
             if(r == 1){
                 particles[i][j][0] = (float)i/(float)W*2.0 - 1.0;
@@ -131,10 +131,6 @@ void display(void){
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 
-
-    //glBindVertexArray(vertArray);
-    
-
     if(swapper == 0){
         glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
@@ -170,10 +166,17 @@ void display(void){
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
         swapper = 0;
     }
+    
+    /*
+    glEnable(GL_BLEND);
+    glBlendEquation( GL_FUNC_ADD );
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    */
 
     glDrawArrays(GL_POINTS, 0, W*H);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+    //glDisable(GL_BLEND);
     glutSwapBuffers();
 }
 
