@@ -8,5 +8,6 @@ vec4 texInfo;
 void main(void){
 
 	texInfo = texelFetch(texUnit, ivec2(indices), 0);
+	gl_PointSize = 5.0f;
 	gl_Position = vec4(texInfo.xy, 0.0, 1.0);
 }

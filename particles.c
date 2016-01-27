@@ -13,8 +13,8 @@
 #include "utils/VectorUtils3.h"
 #include "utils/GL_utilities.h"
 
-#define W 1000
-#define H 800
+#define W 512
+#define H 512
 
 //Global variables
 GLuint drawShader, updateShader, triVertArray, triVertBuffer, indexArray, indexBuffer, tex0, tex1, fbo0, fbo1;
@@ -45,18 +45,8 @@ void initParticles(){
     for(i = 0; i < W; ++i){
         for(j = 0; j < H; ++j){
             
-            //r = (int)round(rand()/(float)RAND_MAX);
-           
-            particles[i][j][0] = (float)i/(float)W;
-            particles[i][j][1] = (float)j/(float)H;
-            particles[i][j][2] = (float)rand()/RAND_MAX*0.001f;
-            particles[i][j][3] = (float)rand()/RAND_MAX*0.001f;
-						/*
-            if(r == 0){
-								particles[i][j][0] = 0.0f;
-            		particles[i][j][1] = 0.0f;                
-=======
-            r = rand()%10;
+
+            r = rand()%5;
 
             if(r == 1){
                 particles[i][j][0] = (float)i/(float)W*2.0 - 1.0;
@@ -68,9 +58,7 @@ void initParticles(){
                 particles[i][j][1] = -1.0f;
                 particles[i][j][2] = 0.0f;
                 particles[i][j][3] = 0.0f;
->>>>>>> 46117084e9ce3d05da28438c315d59a09c2b84b4
             }
-						*/
             indices[l] = (float)i;
             indices[l+1] = (float)j;
             l += 2;
@@ -147,8 +135,6 @@ void display(void){
 	glDisable(GL_DEPTH_TEST);
 
 
-    glBindVertexArray(indexArray);
-
     if(swapper == 0){
         glBindVertexArray(triVertArray);
         glUseProgram(updateShader);
@@ -184,11 +170,18 @@ void display(void){
         glUniform1i(glGetUniformLocation(drawShader, "texUnit"), 0);
         swapper = 0;
     }
+    
+    /*
+    glEnable(GL_BLEND);
+    glBlendEquation( GL_FUNC_ADD );
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    */
 
     glDrawArrays(GL_POINTS, 0, W*H);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+    //glDisable(GL_BLEND);
     glutSwapBuffers();
 }
 
@@ -207,7 +200,7 @@ int main(int argc, char** argv)
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
   glutInitWindowSize(W, H);
   glutInitWindowPosition(100, 100);
-  glutInitContextVersion(4, 3);
+  glutInitContextVersion(3, 2);
   glutCreateWindow("We'll have all the details! Plus, Chopper Dave! HEYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
   
   glutDisplayFunc(display);
