@@ -195,7 +195,7 @@ int main(int argc, char** argv)
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
   glutInitWindowSize(W, H);
   glutInitWindowPosition(100, 100);
-  glutInitContextVersion(4, 3);
+  glutInitContextVersion(3, 2);
   glutCreateWindow("We'll have all the details! Plus, Chopper Dave! HEYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
   
   glutDisplayFunc(display);
