@@ -47,21 +47,58 @@
 	odT = odT + dT;
 	}
 
+	void calculateNormals(){
+		int i,j,step,y1, y2;
+		step = 1;		
+		for(i=1; i<H-1; i++){
+			for(j=1; j<W-1; j++){
+				y1=y2=i;
+				
+				if(collisions[y1][j][0] == 1){
+				if(collisions[y1+1][j][0]==0 || collisions[y1][j+1][0] || collisions[y1][j-1][0]){
+				if(collisions[y1][j-1][0] == 0){						
+					while(collisions[y1-1][j-1][0] == 0 && y1 > 0){
+						y1=y1-1;				
+					}
+				}else{
+					while(collisions[y1+1][j-1][0] == 1 && y1 < H){
+						y1=y1+1;				
+					}
+				}
+				
+				if(collisions[y2][j+1][0] == 0){						
+					while(collisions[y2-step][j+1][0] == 0 && y2 > 0 && y2 < H){
+						y2=y2-step;				
+					}
+				}else{
+					while(collisions[y2+step][j+1][0] == 1 && y2 > 0 && y2 < H){
+						y2=y2+step;				
+					}
+				}
+				}
+				}
+				
+				collisions[i][j][2] = -(y2-y1);
+				collisions[i][j][3] = 2;		
+			}
+		}
+	}
+
 	void initScene(){
 	int i, j, k, l;
 	int r;
 	float dx, dy;
 	l = 0;
 	srand(time(NULL));
-	for(i = 0; i < W; ++i){
-		for(j = 0; j < H; ++j){
+	for(i = 0; i < H; ++i){
+		for(j = 0; j < W; ++j){
 		    
 				randoms[i][j][0] = (rand()/(float)RAND_MAX)*2.0 - 1.0;
 				randoms[i][j][1] = 0.0f;
 				randoms[i][j][2] = 0.001f*((rand()/(float)RAND_MAX)*2.0-1.0);
 				randoms[i][j][3] = 0.001f*((rand()/(float)RAND_MAX)*2.0-1.0);
 
-		    r = rand()%5;
+		    r = rand()%200;
 
 		    //creation of the particles
 		    if(r == 1){ 
@@ -80,14 +117,14 @@
 				if(j<W/2){		    
 					if(i <= j){
 				      collisions[i][j][0] = 1.0f;
-				      collisions[i][j][2] = -nD;
-				      collisions[i][j][3] = nD;
+				      //collisions[i][j][2] = -nD;
+				      //collisions[i][j][3] = nD;
 				  }
 				}else{
-					if(j <= (H-i)){
+					if(j <= (W-i)){
 				      collisions[i][j][0] = 1.0f;
-				      collisions[i][j][2] = nD;
-				      collisions[i][j][3] = nD;
+				      //collisions[i][j][2] = nD;
+				      //collisions[i][j][3] = nD;
 				  }
 				}
 				}
@@ -95,8 +132,11 @@
 		    indices[l+1] = (float)j;
 		    l += 2;
 		}
+		calculateNormals();
 	}
 	}
+
+	
 
 	void init(void){
 	dumpInfo();
@@ -204,7 +244,8 @@ void display(void){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-
+	glEnable(GL_POINT_SPRITE);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	
 	if(swapper == 0){
 		glBindVertexArray(triVertArray);
@@ -267,11 +308,7 @@ void display(void){
 		swapper = 0;
 	}
 
-	/*
-	glEnable(GL_BLEND);
-	glBlendEquation( GL_FUNC_ADD );
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	*/
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -289,8 +326,12 @@ void display(void){
 	glBindTexture(GL_TEXTURE_2D, colTex);
 	glUniform1i(glGetUniformLocation(mixShader, "colTex"), 2);
 	
+	glEnable(GL_BLEND);
+	glBlendEquation( GL_FUNC_ADD );
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	
+	glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFlush();
 	//glDisable(GL_BLEND);

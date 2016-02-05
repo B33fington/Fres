@@ -13,10 +13,10 @@ vec4 colTest;
 vec2 reflect;		
 int x;
 int y;
-float gravity = -0.00005f;
+float gravity = -0.000005f;
 float speed;
-float epsilon = 0.25;
-float mass = 1.0;
+float epsilon = 0.5;
+float mass = 10.0;
 void main(void){
 	texInfo = texelFetch(partTex, ivec2(gl_FragCoord.xy), 0);
 	reflect = vec2(0,0);
