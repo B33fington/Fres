@@ -10,7 +10,7 @@
 	#include <stdio.h>
 	#include <GL/gl.h>
 	#include "utils/MicroGlut.h"
-	#include "utils/VectorUtils3.h"
+	//#include "utils/VectorUtils3.h"
 	#include "utils/GL_utilities.h"
 
 	#define W 512
@@ -47,6 +47,12 @@
 	odT = odT + dT;
 	}
 
+	createObstacle(int i, int j, int posX, int posY){
+		if(sqrt(pow(i-posX,2) + pow(j-posY,2)) < 64)
+					collisions[i][j][0] = 1.0f;
+				
+	}
+		
 	void calculateNormals(){
 		int i,j,step,y1, y2;
 		step = 1;		
@@ -98,7 +104,7 @@
 				randoms[i][j][2] = 0.001f*((rand()/(float)RAND_MAX)*2.0-1.0);
 				randoms[i][j][3] = 0.001f*((rand()/(float)RAND_MAX)*2.0-1.0);
 
-		    r = rand()%200;
+		    r = 1;//rand()%5;
 
 		    //creation of the particles
 		    if(r == 1){ 
@@ -113,21 +119,10 @@
 		    }
 
 		    //creation of the collision texture
-				if(i > 100){				
-				if(j<W/2){		    
-					if(i <= j){
-				      collisions[i][j][0] = 1.0f;
-				      //collisions[i][j][2] = -nD;
-				      //collisions[i][j][3] = nD;
-				  }
-				}else{
-					if(j <= (W-i)){
-				      collisions[i][j][0] = 1.0f;
-				      //collisions[i][j][2] = nD;
-				      //collisions[i][j][3] = nD;
-				  }
-				}
-				}
+				createObstacle(i, j, 256, 256);
+				createObstacle(i, j, 170, 150);
+				createObstacle(i, j, 170, 362);			
+
 		    indices[l] = (float)i;
 		    indices[l+1] = (float)j;
 		    l += 2;
@@ -312,7 +307,15 @@ void display(void){
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo2);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_BLEND);
+	glBlendEquation( GL_FUNC_ADD );
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
 	glDrawArrays(GL_POINTS, 0, W*H);
+
+	glDisable(GL_BLEND);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
@@ -326,15 +329,12 @@ void display(void){
 	glBindTexture(GL_TEXTURE_2D, colTex);
 	glUniform1i(glGetUniformLocation(mixShader, "colTex"), 2);
 	
-	glEnable(GL_BLEND);
-	glBlendEquation( GL_FUNC_ADD );
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisable(GL_BLEND);
+	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFlush();
-	//glDisable(GL_BLEND);
 	glutSwapBuffers();
 }
 
@@ -354,7 +354,7 @@ void display(void){
 	glutInitWindowSize(W, H);
 	glutInitWindowPosition(100, 100);
 	glutInitContextVersion(3, 2);
-	glutCreateWindow("We'll have all the details! Plus, Chopper Dave! HEYOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+	glutCreateWindow("toabesök efter piri piri");
 
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);

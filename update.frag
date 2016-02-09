@@ -13,9 +13,9 @@ vec4 colTest;
 vec2 reflect;		
 int x;
 int y;
-float gravity = -0.000005f;
+float gravity = -0.0001f;
 float speed;
-float epsilon = 0.5;
+float epsilon = 0.2;
 float mass = 10.0;
 void main(void){
 	texInfo = texelFetch(partTex, ivec2(gl_FragCoord.xy), 0);
@@ -23,7 +23,7 @@ void main(void){
 
 	if(texInfo.g <= -1.0f || texInfo.r < -1.0 || texInfo.r > 1.0){
 		texInfo.r = texelFetch(randomTex, ivec2(gl_FragCoord.xy), 0).r;
-		texInfo.g = 0.9f; 		
+		texInfo.g = 1.0f; 		
 		texInfo.b = texelFetch(randomTex, ivec2(gl_FragCoord.xy), 0).b;
 		texInfo.a = texelFetch(randomTex, ivec2(gl_FragCoord.xy), 0).a;
 		
@@ -37,13 +37,13 @@ void main(void){
 	if(abs(texInfo.g - 10.0f) > 0.001f){
 	if(abs(colTest.r - 1.0f) < 0.001f  && texInfo.r > -1.0 && texInfo.r < 1.0){
 		
-		float impulse = (dot(-(1+epsilon)*texInfo.ba, normalize(colTest.ba))) / (1.0/mass);
+		float impulse = (-(1+epsilon)*dot(texInfo.ba, normalize(colTest.ba))) / (1.0/mass);
 		texInfo.ba = texInfo.ba + (impulse/mass) * normalize(colTest.ba);
 
 	}
 	texInfo.a = texInfo.a + gravity;
 	}
-	color = vec4(texInfo.r + texInfo.b, texInfo.g + texInfo.a, texInfo.b, texInfo.a);
+	color = vec4(texInfo.r + texInfo.b, texInfo.g + texInfo.a, texInfo.b, texInfo.a); 
 }
 
 /*speed = length(texInfo.ba);
